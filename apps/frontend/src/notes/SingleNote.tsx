@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Editor } from '../editor'
 import { useNote } from './hooks'
 import { ReadyState } from 'react-use-websocket'
@@ -10,19 +10,36 @@ interface SingleNoteProps {
 }
 
 const Home: React.FC<SingleNoteProps> = ({ id }) => {
-  const { note, readyState } = useNote(id)
+  const [note, setNote] = useState<any>(null);
 
-  const connectionStatusColor = {
-    [ReadyState.CONNECTING]: 'info',
-    [ReadyState.OPEN]: 'success',
-    [ReadyState.CLOSING]: 'warning',
-    [ReadyState.CLOSED]: 'error',
-    [ReadyState.UNINSTANTIATED]: 'error',
-  }[readyState] as BadgeTypeMap['props']['color']
+  useEffect(() => {
+    fetchNote(id);
+  }, [id])
+
+  //fetch note by id
+  async function fetchNote(id: string) {
+    try {
+      const res = await fetch(`http://localhost:3001/api/notes/${id}`);
+      const data = await res.json();
+    
+      setNote(data);
+    }
+    catch(err) {
+      console.log("Could not fetch note");
+    }
+  }
+
+  // const connectionStatusColor = {
+  //   [ReadyState.CONNECTING]: 'info',
+  //   [ReadyState.OPEN]: 'success',
+  //   [ReadyState.CLOSING]: 'warning',
+  //   [ReadyState.CLOSED]: 'error',
+  //   [ReadyState.UNINSTANTIATED]: 'error',
+  // }[readyState] as BadgeTypeMap['props']['color']
 
   return note ? (
     <>
-      <Badge color={connectionStatusColor} variant="dot" sx={{ width: '100%' }}>
+      <Badge variant="dot" sx={{ width: '100%' }}>
         <TextField
           value={note.title}
           variant="standard"
@@ -38,7 +55,7 @@ const Home: React.FC<SingleNoteProps> = ({ id }) => {
           flexDirection: 'column',
         }}
       >
-        <Editor initialValue={note.content} />
+        <Editor initialValue={note.content} docId={id} />
       </Paper>
     </>
   ) : null

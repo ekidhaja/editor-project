@@ -24,19 +24,23 @@ export const useNotesList = () => {
   }
 }
 
-export const useNote = (id: string) => {
-  const { readyState, lastMessage, sendMessage } = useWebSocket(`ws://localhost:3001/api/notes/${id}`)
+export const useNote = async (id: string) => {
+  // const { readyState, lastMessage, sendMessage } = useWebSocket(`ws://localhost:3001/api/notes/${id}`)
 
-  // Send a message when ready on first load
-  useEffect(() => {
-    if (readyState === ReadyState.OPEN && lastMessage === null) {
-      sendMessage('')
-    }
-  }, [readyState, lastMessage])
+  // // Send a message when ready on first load
+  // useEffect(() => {
+  //   if (readyState === ReadyState.OPEN && lastMessage === null) {
+  //     sendMessage('')
+  //   }
+  // }, [readyState, lastMessage])
   
 
-  return {
-    note: lastMessage && JSON.parse(lastMessage.data) as NoteResponse,
-    readyState,
-  }
+  // return {
+  //   note: lastMessage && JSON.parse(lastMessage.data) as NoteResponse,
+  //   readyState,
+  // }
+  const res = await fetch(`http://localhost:3001/api/notes/${id}`);
+  const data = await res.json();
+
+  return { note: data }
 }
