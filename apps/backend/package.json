@@ -20,7 +20,8 @@
     "firebase-admin": "^10.0.0",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
-    "morgan": "~1.9.1"
+    "morgan": "~1.9.1",
+    "socket.io": "^2.2.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
@@ -30,6 +31,7 @@
     "@types/jest": "^27.0.2",
     "@types/morgan": "^1.9.3",
     "@types/node": "^16.10.6",
+    "@types/socket.io": "^1.4.32",
     "jest": "^27.3.1",
     "nodemon": "^2.0.14",
     "ts-jest": "^27.0.7",

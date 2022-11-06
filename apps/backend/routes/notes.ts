@@ -38,20 +38,32 @@ const notesHandler: RequestHandler = (_req, res: Response<NotesResponse>) => {
   })
 }
 
-const noteHandler: WebsocketRequestHandler = (ws, req) => {
-  ws.on('message', () => {
-    switch (req.params.id) {
-      case NOTE_1.id: {
-        return ws.send(JSON.stringify(NOTE_1))
-      }
-      case NOTE_2.id: {
-        return ws.send(JSON.stringify(NOTE_2))
-      }
+// const noteHandler: WebsocketRequestHandler = (ws, req) => {
+//   ws.on('message', () => {
+//     switch (req.params.id) {
+//       case NOTE_1.id: {
+//         return ws.send(JSON.stringify(NOTE_1))
+//       }
+//       case NOTE_2.id: {
+//         return ws.send(JSON.stringify(NOTE_2))
+//       }
+//     }
+//   })
+// }
+
+const noteHandler: RequestHandler = (req, res: Response<NoteResponse>) => {
+  switch (req.params.id) {
+    case NOTE_1.id: {
+      return res.json(NOTE_1)
     }
-  })
+    case NOTE_2.id: {
+      return res.json(NOTE_2)
+    }
+  }
 }
 
 router.get('/', notesHandler)
-router.ws('/:id', noteHandler)
+// router.ws('/:id', noteHandler)
+router.get('/:id', noteHandler)
 
 export default router
