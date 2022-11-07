@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Editor } from '../editor'
-import { useNote } from './hooks'
 import { ReadyState } from 'react-use-websocket'
 
 import { Paper, TextField, Badge, BadgeTypeMap } from '@mui/material'
@@ -13,21 +12,26 @@ const Home: React.FC<SingleNoteProps> = ({ id }) => {
   const [note, setNote] = useState<any>(null);
 
   useEffect(() => {
-    fetchNote(id);
-  }, [id])
+    const abortController = new AbortController();
+    async function fetchNote() {
+      try {
+        const res = await fetch(`http://localhost:3001/api/notes/${id}`, { signal: abortController.signal });
+        const data = await res.json();
+      
+        setNote(data);
+      }
+      catch(err) {
+        console.log("Could not fetch note");
+      }
+    }
 
-  //fetch note by id
-  async function fetchNote(id: string) {
-    try {
-      const res = await fetch(`http://localhost:3001/api/notes/${id}`);
-      const data = await res.json();
-    
-      setNote(data);
+    fetchNote();
+
+    return () => {
+      abortController.abort();
     }
-    catch(err) {
-      console.log("Could not fetch note");
-    }
-  }
+
+  }, [id]);
 
   // const connectionStatusColor = {
   //   [ReadyState.CONNECTING]: 'info',
@@ -58,7 +62,7 @@ const Home: React.FC<SingleNoteProps> = ({ id }) => {
         <Editor initialValue={note.content} docId={id} />
       </Paper>
     </>
-  ) : null
+  ) : <div>Loading...</div>
 }
 
 export default Home

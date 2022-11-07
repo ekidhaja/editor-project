@@ -1,7 +1,7 @@
 // @refresh reset // Fixes hot refresh errors in development https://github.com/ianstormtaylor/slate/issues/3477
 
 import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
-import { createEditor, Descendant, BaseEditor } from 'slate'
+import { createEditor, Descendant, BaseEditor, Transforms } from 'slate'
 import { withHistory, HistoryEditor } from 'slate-history'
 import { handleHotkeys } from './helpers'
 
@@ -44,13 +44,38 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
   useEffect(() => {
     socket.emit('join', docId);
 
-    socket.on(`text-changed`, ({ops}: any) => {
+    socket.on(`text-changed`, ({ newValue }: any) => {
       remote.current = true;
-      console.log("text recieved was: ", ops);
-      // Editor.withoutNormalizing(editor, ()=>{
-      //   JSON.parse(ops).forEach((op: any) => editor.apply(op));
-      // })
-      ops.forEach((op: any) => editor.apply(op));
+      console.log("text recieved was: ", newValue);
+      // ops.forEach((op: any) => editor.apply(op));
+
+      // Get initial total nodes to prevent deleting affecting the loop
+      let totalNodes = editor.children.length;
+
+      // No saved content, don't delete anything to prevent errors
+      if (newValue?.length) {
+          // Remove every node except the last one
+          // Otherwise SlateJS will return error as there's no content
+          for (let i = 0; i < totalNodes - 1; i++) {
+              console.log(i)
+              Transforms.removeNodes(editor, {
+                  at: [totalNodes-i-1],
+              });
+          }
+
+          // Add content to SlateJS
+          for (const val of newValue ) {
+              Transforms.insertNodes(editor, val, {
+                  at: [editor.children.length],
+              });
+          }
+
+          // Remove the last node that was leftover from before
+          Transforms.removeNodes(editor, {
+              at: [0],
+          });
+      }
+
       remote.current = false;
       socketchange.current = true;
     });
@@ -81,7 +106,7 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
         if (ops.length && !remote.current && !socketchange.current) {
           setSaved(false);
           socket.emit("text-changed", {
-            newText: value,
+            newValue: value,
             docId,
             ops
           });

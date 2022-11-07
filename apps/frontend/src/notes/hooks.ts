@@ -25,22 +25,13 @@ export const useNotesList = () => {
 }
 
 export const useNote = async (id: string) => {
-  // const { readyState, lastMessage, sendMessage } = useWebSocket(`ws://localhost:3001/api/notes/${id}`)
+  try {
+    const res = await fetch(`http://localhost:3001/api/notes/${id}`);
+    const data = await res.json();
 
-  // // Send a message when ready on first load
-  // useEffect(() => {
-  //   if (readyState === ReadyState.OPEN && lastMessage === null) {
-  //     sendMessage('')
-  //   }
-  // }, [readyState, lastMessage])
-  
-
-  // return {
-  //   note: lastMessage && JSON.parse(lastMessage.data) as NoteResponse,
-  //   readyState,
-  // }
-  const res = await fetch(`http://localhost:3001/api/notes/${id}`);
-  const data = await res.json();
-
-  return { note: data }
+    return { note: data }
+  }
+  catch(err) {
+    console.log("error fetching note by id");
+  }
 }
