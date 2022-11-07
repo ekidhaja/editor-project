@@ -1,21 +1,10 @@
-import express from 'express'
-import cors from 'cors'
-import expressWs from 'express-ws'
-
-const app = express()
-const server = require('http').createServer(app);
-const options = { /* ... */ };
-const io = require('socket.io')(server, options);
-
+import express, { Request, Response, NextFunction } from 'express';
+import db from "./firebase";
+import cors from 'cors';
+import { app, server, io } from "./config";
 import apiRoutes from './routes'
 
-import { NOTE_1, NOTE_2 } from './fixtures/notes'
-
-// const httpServer = createServer(app);
-// const io = new Server(httpServer, { /* options */ });
-
 const PORT = 3001
-expressWs(app) 
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
@@ -25,7 +14,9 @@ app.use(
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
   })
 )
-app.get("/api/ping", (req, res) => {
+
+//health check
+app.get("/api/ping", async (req, res) => {
   res.status(200).json("pong");
 });
 
@@ -45,16 +36,28 @@ io.on("connection", (socket: any) => {
   socket.on("text-changed", (data: any) => {
     const room = data.docId;
       socket.to(room).broadcast.emit("text-changed", {
-        newText: data.newText,
+        newValue: data.newValue,
         ops: data.ops
     });
   });
-
-
 });
+
+//handle errors
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  res.status(400).json({
+    error: true,
+    message: err.message
+  })
+}) 
 
 server.listen(PORT, () => {
   console.log(`⚡️[server]: Server is running at https://localhost:${PORT}`);
+  if(db) {
+    console.log("connected to firestore")
+  }
+  else {
+    console.log("could not connect to firestore")
+  }
 })
 
 
