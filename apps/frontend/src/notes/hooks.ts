@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { useEffect } from 'react'
 import useSWR from 'swr'
-import { NotesResponse, NoteResponse } from '../../../backend/routes/notes'
+import { NotesResponse, NoteResponse } from '../../../backend/types';
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 
 // If you want to use GraphQL API or libs like Axios, you can create your own fetcher function. 

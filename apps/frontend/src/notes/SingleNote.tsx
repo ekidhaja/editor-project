@@ -3,6 +3,9 @@ import { Editor } from '../editor'
 import { ReadyState } from 'react-use-websocket'
 
 import { Paper, TextField, Badge, BadgeTypeMap } from '@mui/material'
+import io from "socket.io-client"; 
+
+const socket = io("http://localhost:3001");
 
 interface SingleNoteProps {
   id: string
@@ -29,18 +32,21 @@ const Home: React.FC<SingleNoteProps> = ({ id }) => {
       }
     }
 
-    fetchNote();
+    socket.emit('join', id);
 
+    //listen for change in note title
+    socket.on(`title-changed`, (title: string) => {
+      setNoteTitle(title);
+    });
+
+    if(id) fetchNote();
+    
     return () => {
       abortController.abort();
+      socket.off('title-changed')
     }
 
   }, [id]);
-
-  //listen for change in note title
-  useEffect(() => {
-    
-  }, []);
 
   // const connectionStatusColor = {
   //   [ReadyState.CONNECTING]: 'info',

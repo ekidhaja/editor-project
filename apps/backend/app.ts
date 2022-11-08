@@ -2,7 +2,8 @@ import express, { Request, Response, NextFunction } from 'express';
 import db from "./firebase";
 import cors from 'cors';
 import { app, server, io } from "./config";
-import apiRoutes from './routes'
+import apiRoutes from './routes';
+import { NotesResponse } from './types';
 
 const PORT = 3001
 
@@ -40,6 +41,23 @@ io.on("connection", (socket: any) => {
         ops: data.ops
     });
   });
+
+  //listen for note title updates and notify clients to refresh
+  socket.on("note-title-updated", ({ id, title }: any) => {
+    socket.to(id).emit("title-changed", title);
+  })
+
+  //listen for changes in notes collection and emit to all clients
+  db.collection("notes").onSnapshot((querySnapshot) => {
+      var notes: any = [];
+      querySnapshot.forEach((doc) => {
+        const { title } = doc.data();
+          notes.push({ id: doc.id, title});
+      });
+
+      socket.emit("notesList-changed", { notes });
+  });
+
 });
 
 //handle errors

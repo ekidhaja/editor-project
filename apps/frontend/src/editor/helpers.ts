@@ -3,7 +3,6 @@ import isHotkey from 'is-hotkey'
 import { KeyboardEvent } from 'react'
 import { CustomElementType } from './CustomElement'
 import { CustomText } from './CustomLeaf'
-// import isUrl from "is-url";
 
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list'];
@@ -81,7 +80,7 @@ export const withLinks = (editor: any) => {
   }
 
   editor.insertText = (text: string) => {
-    if (text ) {
+    if (text && isURL(text)) {
       wrapLink(editor, text)
     } else {
       insertText(text)
@@ -91,7 +90,7 @@ export const withLinks = (editor: any) => {
   editor.insertData = (data: any) => {
     const text = data.getData('text/plain')
 
-    if (text ) {
+    if (text && isURL(text)) {
       wrapLink(editor, text)
     } else {
       insertData(data)
@@ -141,4 +140,14 @@ export const wrapLink = (editor: any, url: string) => {
     Transforms.wrapNodes(editor, link, { split: true })
     Transforms.collapse(editor, { edge: 'end' })
   }
+}
+
+export function isURL(str: string) {
+  var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+  return !!pattern.test(str);
 }

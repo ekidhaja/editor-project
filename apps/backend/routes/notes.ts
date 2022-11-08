@@ -1,40 +1,15 @@
-import express, { RequestHandler, Response } from 'express'
-import { WebsocketRequestHandler } from 'express-ws'
-import { Descendant } from 'slate'
-import { NOTE_1, NOTE_2 } from '../fixtures/notes'
-import db from "../firebase";
-
-// Patch `express.Router` to support `.ws()` without needing to pass around a `ws`-ified app.
-// https://github.com/HenningM/express-ws/issues/86
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const patch = require('express-ws/lib/add-ws-method')
-patch.default(express.Router)
+import express, { RequestHandler, Response } from 'express';
+import { io } from "../config";
+import { getNotes, getNote, addNote, updateNote } from "../utils";
+import { NoteResponse, NotesResponse } from "../types";
 
 const router = express.Router()
 
-export interface NotesResponse {
-  notes: Array<{
-    id: string
-    title: string
-  }>
-}
-
-export interface NoteResponse {
-  id: string
-  title: string
-  content: Array<Descendant>
-}
-
 const notesHandler: RequestHandler = async (_req, res: Response<NotesResponse>, next) => {
   try {
-    const snapshot = await db.collection('notes').get();
-    const notes: any = [];
-    snapshot.forEach((doc) => {
-      const { title } = doc.data();
-      notes.push({ id: doc.id, title })
-    });
+    const notes = await getNotes();
 
-    res.json({ notes })
+    res.status(200).json({ notes })
   }
   catch(err) {
     console.log("error fetching notes");
@@ -46,22 +21,9 @@ const noteHandler: RequestHandler = async (req, res: Response<NoteResponse>, nex
   const { id } = req.params;
 
   try {
-    const snapshot = await db.collection('notes').get();
-    const note: NoteResponse = {
-      id: "",
-      title: "",
-      content: []
-    };
-    snapshot.forEach((doc) => {
-      if(doc.id === id) {
-        const { title, content } = doc.data();
-        note.id = doc.id;
-        note.title = title;
-        note.content = content;
-      }
-    });
+    const note = await getNote(id);
 
-    res.json(note);
+    res.status(200).json(note);
   }
   catch(err) {
     console.log("error fetching note by id");
@@ -69,8 +31,43 @@ const noteHandler: RequestHandler = async (req, res: Response<NoteResponse>, nex
   }
 }
 
-router.get('/', notesHandler)
-// router.ws('/:id', noteHandler)
-router.get('/:id', noteHandler)
+const addNoteHandler: RequestHandler = async (req, res: Response, next) => {
+  const { title } = req.body;
+
+  try {
+    const id = await addNote(title);
+    
+
+    res.status(200).json({ id });
+  }
+  catch(err) {
+    console.log("error adding note fetching note by id");
+    next(err);
+  }
+}
+
+const updateNoteHandler: RequestHandler = async (req, res: Response, next) => {
+
+  try {
+    const resObj = await updateNote(req.params.id, req.body.title);
+    
+    if(resObj) {
+      res.status(200).json(resObj);
+    }
+    else {
+      throw Error();
+    }
+
+  }
+  catch(err) {
+    console.log("error adding note fetching note by id");
+    next(err);
+  }
+}
+
+router.get('/', notesHandler);
+router.get('/:id', noteHandler);
+router.post('/', addNoteHandler);
+router.patch('/:id', updateNoteHandler);
 
 export default router
