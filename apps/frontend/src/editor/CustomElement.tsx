@@ -10,6 +10,7 @@ export enum CustomElementType {
   listItem = 'list-item',
   numberedList = 'numbered-list',
   paragraph = 'paragraph',
+  link = 'link',
 }
 
 export interface CustomElement extends BaseElement {
@@ -30,6 +31,8 @@ export const CustomElement: React.FC<RenderElementProps> = ({ attributes, childr
       return <li {...attributes}>{children}</li>
     case CustomElementType.numberedList:
       return <ol {...attributes}>{children}</ol>
+    case CustomElementType.link:
+      return <a {...attributes} href="#">{children}</a>
     default:
       return <p {...attributes}>{children}</p>
   }

@@ -1,27 +1,33 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
-import { List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material'
+import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material'
 import { Assignment as AssignmentIcon } from '@mui/icons-material'
 import { useNotesList } from './hooks'
+import EditButton from "../components/EditButton";
 
 interface NotesListProps {
   activeNoteId?: string
 }
 
 const NotesList: React.FC<NotesListProps> = ({ activeNoteId }) => {
-  const { notesList } = useNotesList()
+  const { notesList } = useNotesList();
 
   return (
     <List>
       {notesList?.map((note) => (
-        <Link href={`/notes/${note.id}`} key={note.id}>
-          <ListItemButton selected={note.id === activeNoteId}>
-            <ListItemIcon>
-              <AssignmentIcon />
-            </ListItemIcon>
-            <ListItemText primary={note.title} />
-          </ListItemButton>
-        </Link>
+        <ListItem disablePadding selected={note.id === activeNoteId} key={note.id}> 
+          <Link href={`/notes/${note.id}`}>
+            <ListItemButton>
+              <ListItemIcon>
+                <AssignmentIcon />
+              </ListItemIcon>
+              <ListItemText primary={note.title} /> 
+            </ListItemButton>
+          </Link>
+          <ListItemIcon>
+            <EditButton title={note.title} />
+          </ListItemIcon>
+        </ListItem>
       ))}
     </List>
   )

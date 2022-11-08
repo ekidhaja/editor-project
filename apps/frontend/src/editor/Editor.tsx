@@ -1,9 +1,9 @@
 // @refresh reset // Fixes hot refresh errors in development https://github.com/ianstormtaylor/slate/issues/3477
 
 import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
-import { createEditor, Descendant, BaseEditor, Transforms } from 'slate'
+import { createEditor, Descendant, BaseEditor, Transforms, Operation } from 'slate'
 import { withHistory, HistoryEditor } from 'slate-history'
-import { handleHotkeys } from './helpers'
+import { handleHotkeys, withLinks } from './helpers'
 
 import { Editable, withReact, Slate, ReactEditor } from 'slate-react'
 import { EditorToolbar } from './EditorToolbar'
@@ -31,22 +31,22 @@ interface EditorProps {
 }
 
 export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, docId }) => {
-  const [value, setValue] = useState<Array<Descendant>>(initialValue)
+  const [value, setValue] = useState<Array<Descendant>>(initialValue);
   const renderElement = useCallback(props => <CustomElement {...props} />, [])
   const renderLeaf = useCallback(props => <CustomLeaf {...props} />, [])
-  const editor = useMemo(() => withHistory(withReact(createEditor())), [])
+  const editor = useMemo(() => withLinks(withHistory(withReact(createEditor()))), [])
 
   const [saved, setSaved] = useState<boolean>(true);
 
   const remote = useRef(false);
   const socketchange = useRef(false);
 
+  //Apply changes from remote docs
   useEffect(() => {
     socket.emit('join', docId);
 
     socket.on(`text-changed`, ({ newValue }: any) => {
       remote.current = true;
-      console.log("text recieved was: ", newValue);
       // ops.forEach((op: any) => editor.apply(op));
 
       // Get initial total nodes to prevent deleting affecting the loop
@@ -54,30 +54,31 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
 
       // No saved content, don't delete anything to prevent errors
       if (newValue?.length) {
-          // Remove every node except the last one
-          // Otherwise SlateJS will return error as there's no content
-          for (let i = 0; i < totalNodes - 1; i++) {
-              console.log(i)
-              Transforms.removeNodes(editor, {
-                  at: [totalNodes-i-1],
-              });
-          }
 
-          // Add content to SlateJS
-          for (const val of newValue ) {
-              Transforms.insertNodes(editor, val, {
-                  at: [editor.children.length],
-              });
-          }
+        // Remove every node except the last one
+        // Otherwise SlateJS will return error as there's no content
+        for (let i = 0; i < totalNodes - 1; i++) {
+            console.log(i)
+            Transforms.removeNodes(editor, {
+                at: [totalNodes-i-1],
+            });
+        }
 
-          // Remove the last node that was leftover from before
-          Transforms.removeNodes(editor, {
-              at: [0],
-          });
+        // Add content to SlateJS
+        for (const val of newValue ) {
+            Transforms.insertNodes(editor, val, {
+                at: [editor.children.length],
+            });
+        }
+
+        // Remove the last node that was leftover from before
+        Transforms.removeNodes(editor, {
+            at: [0],
+        });
       }
 
-      remote.current = false;
-      socketchange.current = true;
+        remote.current = false;
+        socketchange.current = true;
     });
 
     socket.on(`failed`,()=>{
@@ -95,7 +96,7 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
     <Slate editor={editor} value={value} onChange={value => {
       setValue(value);
       
-      const ops = editor.operations.filter(op => {
+      const ops = editor.operations.filter((op: any) => {
           if(op){
             return op.type !== "set_selection"
           }
@@ -103,6 +104,7 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
           return false;
         });
 
+        //emit changes when user performs an operation on the editor
         if (ops.length && !remote.current && !socketchange.current) {
           setSaved(false);
           socket.emit("text-changed", {
@@ -111,6 +113,7 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
             ops
           });
         }
+
         socketchange.current = false;
     }}>
       <EditorToolbar />
@@ -129,3 +132,4 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
     </Slate>
   )
 }
+

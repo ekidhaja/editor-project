@@ -10,15 +10,19 @@ interface SingleNoteProps {
 
 const Home: React.FC<SingleNoteProps> = ({ id }) => {
   const [note, setNote] = useState<any>(null);
+  const [noteTitle, setNoteTitle] = useState<string>("");
 
+  //fetch note by id when id changes
   useEffect(() => {
     const abortController = new AbortController();
+
     async function fetchNote() {
       try {
         const res = await fetch(`http://localhost:3001/api/notes/${id}`, { signal: abortController.signal });
         const data = await res.json();
       
         setNote(data);
+        setNoteTitle(data.title);
       }
       catch(err) {
         console.log("Could not fetch note");
@@ -33,6 +37,11 @@ const Home: React.FC<SingleNoteProps> = ({ id }) => {
 
   }, [id]);
 
+  //listen for change in note title
+  useEffect(() => {
+    
+  }, []);
+
   // const connectionStatusColor = {
   //   [ReadyState.CONNECTING]: 'info',
   //   [ReadyState.OPEN]: 'success',
@@ -45,7 +54,7 @@ const Home: React.FC<SingleNoteProps> = ({ id }) => {
     <>
       <Badge variant="dot" sx={{ width: '100%' }}>
         <TextField
-          value={note.title}
+          value={noteTitle}
           variant="standard"
           fullWidth={true}
           inputProps={{ style: { fontSize: 32, color: '#666' } }}

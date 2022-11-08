@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import type { AppProps } from 'next/app'
 import CssBaseline from '@mui/material/CssBaseline'
+import "../style.css";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
