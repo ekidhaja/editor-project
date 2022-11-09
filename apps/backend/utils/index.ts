@@ -21,6 +21,7 @@ export async function getNotes() {
     return notes;
 }
 
+//get note
 export async function getNote(id: string) {
     const doc = await db.collection('notes').doc(id).get();
     const note = doc.data() as NoteResponse;
