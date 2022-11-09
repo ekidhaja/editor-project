@@ -25,7 +25,18 @@ interface ButtonProps {
 }
 
 const Button: React.FC<ButtonProps> = ({ active, children, onMouseDown }) => (
-  <button onMouseDown={onMouseDown} style={{ backgroundColor: active ? '#333' : 'white', color: active ? 'white' : '#333', border: '1px solid #eee' }}>{children}</button>
+  <button 
+    onMouseDown={onMouseDown} 
+    style={{ 
+      backgroundColor: active ? '#333' : 'white', 
+      color: active ? 'white' : '#333', 
+      border: 'none',
+      cursor: "pointer",
+      marginRight: 10
+    }}
+  >
+    {children}
+  </button>
 )
 
 interface BlockButtonProps {
@@ -43,7 +54,7 @@ const BlockButton: React.FC<BlockButtonProps> = ({ format, Icon }) => {
         toggleBlock(editor, format)
       }}
     >
-      <Icon style={{ fontSize: 20, cursor: "pointer" }} />
+      <Icon sx={{ fontSize: 24 }} />
     </Button>
   )
 }
@@ -64,7 +75,7 @@ const MarkButton: React.FC<MarkButtonProps> = ({ format, Icon }) => {
         toggleMark(editor, format)
       }}
     >
-      <Icon style={{ fontSize: 20, cursor: "pointer" }} />
+      <Icon sx={{ fontSize: 24 }} />
     </Button>
   )
 }
@@ -81,7 +92,7 @@ const LinkButton: React.FC = () => {
         insertLink(editor, url)
       }}
     >
-      <Link sx={{ fontSize: 20, cursor: "pointer" }} />
+      <Link sx={{ fontSize: 24 }} />
     </Button>
   )
 }
@@ -93,12 +104,13 @@ const RemoveLinkButton: React.FC = () => {
     <Button
       active={isLinkActive(editor)}
       onMouseDown={event => {
+        event.preventDefault()
         if(isLinkActive(editor)) {
           unwrapLink(editor)
         }
       }}
     >
-      <LinkOff sx={{ fontSize: 20, cursor: "pointer" }} />
+      <LinkOff sx={{ fontSize: 24 }} />
     </Button>
   )
 }
@@ -106,19 +118,17 @@ const RemoveLinkButton: React.FC = () => {
 export const EditorToolbar: React.FC = () => {
   return (
     <div className="editor-toolbar">
-      <div style={{ width: "40%", display: "flex", alignItems: "center", justifyContent: "space-between"}}>
-        <MarkButton format="bold" Icon={FormatBold} />
-        <MarkButton format="italic" Icon={FormatItalic} />   
-        <MarkButton format="underline" Icon={FormatUnderlined} />
-        <MarkButton format="code" Icon={Code} />
-        <BlockButton format={CustomElementType.headingOne} Icon={LooksOne} />
-        <BlockButton format={CustomElementType.headingTwo} Icon={LooksTwo} />
-        <BlockButton format={CustomElementType.blockQuote} Icon={FormatQuote} />
-        <BlockButton format={CustomElementType.numberedList} Icon={FormatListNumbered} />
-        <BlockButton format={CustomElementType.bulletedList} Icon={FormatListBulleted} />
-        <LinkButton />
-        <RemoveLinkButton />
-      </div>
+      <MarkButton format="bold" Icon={FormatBold} />
+      <MarkButton format="italic" Icon={FormatItalic} />   
+      <MarkButton format="underline" Icon={FormatUnderlined} />
+      <MarkButton format="code" Icon={Code} />
+      <BlockButton format={CustomElementType.headingOne} Icon={LooksOne} />
+      <BlockButton format={CustomElementType.headingTwo} Icon={LooksTwo} />
+      <BlockButton format={CustomElementType.blockQuote} Icon={FormatQuote} />
+      <BlockButton format={CustomElementType.numberedList} Icon={FormatListNumbered} />
+      <BlockButton format={CustomElementType.bulletedList} Icon={FormatListBulleted} />
+      <LinkButton />
+      <RemoveLinkButton />
     </div>
   )
 }

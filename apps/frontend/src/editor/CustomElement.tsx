@@ -32,7 +32,8 @@ export const CustomElement: React.FC<RenderElementProps> = ({ attributes, childr
     case CustomElementType.numberedList:
       return <ol {...attributes}>{children}</ol>
     case CustomElementType.link:
-      return <a {...attributes} href="#">{children}</a>
+      //@ts-ignore
+      return <a {...attributes} href={element.url}>{children}</a>
     default:
       return <p {...attributes}>{children}</p>
   }

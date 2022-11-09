@@ -25,6 +25,7 @@
     "react-use-websocket": "^2.9.1",
     "slate": "^0.66.5",
     "slate-history": "^0.66.0",
+    "slate-hyperscript": "^0.77.0",
     "slate-react": "^0.66.4",
     "socket.io-client": "^2.2.0",
     "swr": "^1.0.1"

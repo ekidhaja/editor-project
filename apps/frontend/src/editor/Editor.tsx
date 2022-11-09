@@ -3,7 +3,7 @@
 import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
 import { createEditor, Descendant, BaseEditor, Transforms, Operation } from 'slate'
 import { withHistory, HistoryEditor } from 'slate-history'
-import { handleHotkeys, withLinks } from './helpers'
+import { handleHotkeys, withLinks, withHtml } from './helpers'
 
 import { Editable, withReact, Slate, ReactEditor } from 'slate-react'
 import { EditorToolbar } from './EditorToolbar'
@@ -34,12 +34,12 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
   const [value, setValue] = useState<Array<Descendant>>(initialValue);
   const renderElement = useCallback(props => <CustomElement {...props} />, [])
   const renderLeaf = useCallback(props => <CustomLeaf {...props} />, [])
-  const editor = useMemo(() => withLinks(withHistory(withReact(createEditor()))), [])
+  const editor = useMemo(() => withHtml(withLinks(withHistory(withReact(createEditor())))), [])
 
   const [saved, setSaved] = useState<boolean>(true);
 
   const remote = useRef(false);
-  const socketchange = useRef(false);
+  const socketchange = useRef(false); 
 
   //Apply changes from remote docs
   useEffect(() => {
