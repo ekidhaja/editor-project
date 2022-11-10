@@ -48,7 +48,8 @@ io.on("connection", (socket: any) => {
   })
 
   //listen for changes in notes collection and emit to all clients
-  db.collection("notes").onSnapshot((querySnapshot) => {
+  db.collection("notes")
+    .onSnapshot((querySnapshot) => {
       var notes: any = [];
       querySnapshot.forEach((doc) => {
         const { title } = doc.data();
@@ -56,6 +57,8 @@ io.on("connection", (socket: any) => {
       });
 
       socket.emit("notesList-changed", { notes });
+  }, (error) => {
+    console.log("Error listening to firestore changes: ", error.message);
   });
 
 });
