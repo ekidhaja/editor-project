@@ -12,7 +12,7 @@ type LinkElement = { type: 'link'; url: string; children: Descendant[] }
 
 const ELEMENT_TAGS = {
   A: (el: any) => ({ type: 'link', url: el.getAttribute('href') }),
-  BLOCKQUOTE: () => ({ type: 'quote' }),
+  BLOCKQUOTE: () => ({ type: 'block-quote' }),
   H1: () => ({ type: 'heading-one' }),
   H2: () => ({ type: 'heading-two' }),
   H3: () => ({ type: 'heading-three' }),
@@ -154,9 +154,9 @@ export function isURL(str: string) {
 }
 
 export const deserialize = (el: any): any => {
-  if (el.nodeType === 3) {
+  if (el?.nodeType === 3) {
     return el.textContent
-  } else if (el.nodeType !== 1) {
+  } else if (el?.nodeType !== 1) {
     return null
   } else if (el.nodeName === 'BR') {
     return '\n'
@@ -176,11 +176,11 @@ export const deserialize = (el: any): any => {
     .map(deserialize)
     .flat()
 
-  if (children.length === 0) {
+  if (children?.length === 0) {
     children = [{ text: '' }]
   }
 
-  if (el.nodeName === 'BODY') {
+  if (el?.nodeName === 'BODY') {
     return jsx('fragment', {}, children)
   }
 

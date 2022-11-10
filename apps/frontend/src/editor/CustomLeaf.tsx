@@ -15,7 +15,7 @@ export const CustomLeaf: React.FC<RenderLeafProps> = ({ attributes, children, le
   }
 
   if (leaf.code) {
-    children = <code>{children}</code>
+    children = <code style={{ backgroundColor: "#ccc", fontWeight: 500, padding: 1 }}>{children}</code>
   }
 
   if (leaf.italic) {

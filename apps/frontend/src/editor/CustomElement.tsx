@@ -7,10 +7,15 @@ export enum CustomElementType {
   bulletedList = 'bulleted-list',
   headingOne = 'heading-one',
   headingTwo = 'heading-two',
+  headingThree = 'heading-three',
+  headingFour = 'heading-four',
+  headingFive = 'heading-five',
+  headingSix = 'heading-six',
   listItem = 'list-item',
   numberedList = 'numbered-list',
   paragraph = 'paragraph',
   link = 'link',
+  code = 'code',
 }
 
 export interface CustomElement extends BaseElement {
@@ -27,10 +32,20 @@ export const CustomElement: React.FC<RenderElementProps> = ({ attributes, childr
       return <h1 {...attributes}>{children}</h1>
     case CustomElementType.headingTwo:
       return <h2 {...attributes}>{children}</h2>
+    case CustomElementType.headingThree:
+      return <h3 {...attributes}>{children}</h3>
+    case CustomElementType.headingFour:
+      return <h4 {...attributes}>{children}</h4>
+    case CustomElementType.headingFive:
+      return <h5 {...attributes}>{children}</h5>
+    case CustomElementType.headingSix:
+      return <h6 {...attributes}>{children}</h6>
     case CustomElementType.listItem:
       return <li {...attributes}>{children}</li>
     case CustomElementType.numberedList:
       return <ol {...attributes}>{children}</ol>
+    case CustomElementType.code:
+      return (<pre><code {...attributes}>{children}</code></pre>)
     case CustomElementType.link:
       //@ts-ignore
       return <a {...attributes} href={element.url}>{children}</a>

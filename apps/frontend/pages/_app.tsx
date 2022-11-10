@@ -2,6 +2,7 @@ import Head from 'next/head'
 import type { AppProps } from 'next/app'
 import CssBaseline from '@mui/material/CssBaseline'
 import "../style.css";
+import ErrorBoundary from '../src/components/ErrorBoundary';
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -18,7 +19,9 @@ function MyApp({ Component, pageProps }: AppProps) {
         />
       </Head>
       <CssBaseline />
-      <Component {...pageProps} />
+      <ErrorBoundary>
+        <Component {...pageProps} />
+      </ErrorBoundary>
     </>
   )
 }
