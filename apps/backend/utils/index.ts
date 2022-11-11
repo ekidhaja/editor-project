@@ -44,3 +44,9 @@ export async function updateNote(id: string, title: string) {
 
     return res;
 }
+
+export async function deleteNote(id: string) {
+    const res = await db.collection("notes").doc(id).delete();
+
+    return res;
+}

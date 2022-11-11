@@ -1,6 +1,6 @@
 import express, { RequestHandler, Response } from 'express';
 import { io } from "../config";
-import { getNotes, getNote, addNote, updateNote } from "../utils";
+import { getNotes, getNote, addNote, updateNote, deleteNote } from "../utils";
 import { NoteResponse, NotesResponse } from "../types";
 
 const router = express.Router()
@@ -65,9 +65,29 @@ const updateNoteHandler: RequestHandler = async (req, res: Response, next) => {
   }
 }
 
+const deleteNoteHandler: RequestHandler = async (req, res: Response, next) => {
+
+  try {
+    const resObj = await deleteNote(req.params.id);
+    
+    if(resObj) {
+      res.status(200).json(resObj);
+    }
+    else {
+      throw Error();
+    }
+
+  }
+  catch(err) {
+    console.log("error deleting note");
+    next(err);
+  }
+}
+
 router.get('/', notesHandler);
 router.get('/:id', noteHandler);
 router.post('/', addNoteHandler);
 router.patch('/:id', updateNoteHandler);
+router.delete('/:id', deleteNoteHandler);
 
 export default router
