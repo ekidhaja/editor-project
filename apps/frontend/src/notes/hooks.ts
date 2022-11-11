@@ -15,7 +15,7 @@ const fetcher = async (
 }
 
 export const useNotesList = () => {
-  const { data, error } = useSWR<NotesResponse>('http://localhost:3001/api/notes', fetcher)
+  const { data, error } = useSWR<NotesResponse>('http://localhost:3001/api/v1/notes', fetcher)
 
   return {
     notesList: data?.notes,
@@ -26,7 +26,7 @@ export const useNotesList = () => {
 
 export const useNote = async (id: string) => {
   try {
-    const res = await fetch(`http://localhost:3001/api/notes/${id}`);
+    const res = await fetch(`http://localhost:3001/api/v1/notes/${id}`);
     const data = await res.json();
 
     return { note: data }

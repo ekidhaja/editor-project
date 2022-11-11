@@ -10,8 +10,9 @@ class ErrorBoundary extends React.Component {
     }
     render() {
         if (this.state.hasError) {
-            console.log("error occured somewhere in the universe");
+            return <div>There was an error somewhere</div>
         }
+        
         return this.props.children;
     }  
 }

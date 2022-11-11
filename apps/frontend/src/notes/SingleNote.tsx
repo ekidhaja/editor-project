@@ -21,7 +21,7 @@ const Home: React.FC<SingleNoteProps> = ({ id }) => {
 
     async function fetchNote() {
       try {
-        const res = await fetch(`http://localhost:3001/api/notes/${id}`, { signal: abortController.signal });
+        const res = await fetch(`http://localhost:3001/api/v1/notes/${id}`, { signal: abortController.signal });
         const data = await res.json();
       
         setNote(data);

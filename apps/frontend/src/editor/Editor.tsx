@@ -3,12 +3,18 @@
 import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
 import { createEditor, Descendant, BaseEditor, Transforms, Operation } from 'slate'
 import { withHistory, HistoryEditor } from 'slate-history'
-import { handleHotkeys, withLinks, withHtml } from './helpers'
+import { handleHotkeys, withLinks, withHtml } from './helpers';
 
-import { Editable, withReact, Slate, ReactEditor } from 'slate-react'
+import { Editable, withReact, Slate, ReactEditor } from 'slate-react' 
 import { EditorToolbar } from './EditorToolbar'
 import { CustomElement } from './CustomElement'
 import { CustomLeaf, CustomText } from './CustomLeaf'
+
+// Import the core binding
+import { withYjs, slateNodesToInsertDelta, YjsEditor, withYHistory } from '@slate-yjs/core';
+
+// Import yjs
+import * as Y from 'yjs';
 
 import io from "socket.io-client"; 
 
@@ -31,15 +37,37 @@ interface EditorProps {
 }
 
 export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, docId }) => {
-  const [value, setValue] = useState<Array<Descendant>>(initialValue);
-  const renderElement = useCallback(props => <CustomElement {...props} />, [])
-  const renderLeaf = useCallback(props => <CustomLeaf {...props} />, [])
-  const editor = useMemo(() => withHtml(withLinks(withHistory(withReact(createEditor())))), [])
 
-  const [saved, setSaved] = useState<boolean>(true);
+  // Create a yjs document and get the shared type
+  const sharedType = useMemo(() => {
+    const yDoc = new Y.Doc();
+    const sharedType = yDoc.get("content", Y.XmlText);
+    // @ts-ignore Load the initial value into the yjs document
+    sharedType.applyDelta(slateNodesToInsertDelta(initialValue));
+    return sharedType;
+  }, [])
 
+  //Setup binding
+  const editor = useMemo(() => 
+    //@ts-ignore
+    withHtml(withLinks(withHistory(withReact(withYHistory(withYjs(createEditor(), sharedType)))))), 
+  []);
+
+  const renderElement = useCallback(props => <CustomElement {...props} />, []);
+  const renderLeaf = useCallback(props => <CustomLeaf {...props} />, []);
+  const [value, setValue] = useState<Array<Descendant>>([]);
   const remote = useRef(false);
-  const socketchange = useRef(false); 
+  const socketchange = useRef(false);
+  const [saved, setSaved] = useState<boolean>(true); 
+
+  // Connect editor in useEffect to comply with concurrent mode requirements.
+  useEffect(() => {
+    //@ts-ignore
+    YjsEditor.connect(editor);
+
+    //@ts-ignore
+    return () => YjsEditor.disconnect(editor);
+  }, [editor]) 
 
   //Apply changes from remote docs
   useEffect(() => {
@@ -97,24 +125,24 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
       setValue(value);
       
       const ops = editor.operations.filter((op: any) => {
-          if(op){
-            return op.type !== "set_selection"
-          }
-
-          return false;
-        });
-
-        //emit changes when user performs an operation on the editor
-        if (ops.length && !remote.current && !socketchange.current) {
-          setSaved(false);
-          socket.emit("text-changed", {
-            newValue: value,
-            docId,
-            ops
-          });
+        if(op){
+          return op.type !== "set_selection"
         }
 
-        socketchange.current = false;
+        return false;
+      });
+
+      //emit changes when user performs an operation on the editor
+      if (ops.length && !remote.current && !socketchange.current) {
+        console.log("value is: ", sharedType, value)
+        socket.emit("text-changed", {
+          newValue: value,
+          docId,
+          ops
+        });
+      }
+
+      socketchange.current = false;
     }}>
       <EditorToolbar />
       <Editable
