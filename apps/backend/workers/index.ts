@@ -23,5 +23,5 @@ export function dbWorker() {
             })
         }
     
-    }, 60000);
+    }, 600000); //every 10 minutes
 }

@@ -27,7 +27,7 @@ function StartServer() {
   app.use('/api/v1', apiRoutes);
 
   //start workers
-  dbWorker();
+  dbWorker(); 
 
   //websocket server
   io.on("connection", (socket: any) => {
