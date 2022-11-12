@@ -2,6 +2,7 @@ import express, { RequestHandler, Response } from 'express';
 import { io } from "../config";
 import { getNotes, getNote, addNote, updateNote, deleteNote } from "../utils";
 import { NoteResponse, NotesResponse } from "../types";
+import { addToStore, getFromStore, updateTitleInStore } from '../cache';
 
 const router = express.Router()
 
@@ -19,9 +20,20 @@ const notesHandler: RequestHandler = async (_req, res: Response<NotesResponse>, 
 
 const noteHandler: RequestHandler = async (req, res: Response<NoteResponse>, next) => {
   const { id } = req.params;
+  let note: NoteResponse | undefined;
 
   try {
-    const note = await getNote(id);
+    //check if note in cache 
+    note = getFromStore(id);
+
+    //fetch from db if not in cache
+    if(!note) {
+      note = await getNote(id);
+
+      //add to cache
+      addToStore(id, note);
+    }
+
 
     res.status(200).json(note);
   }
@@ -50,6 +62,9 @@ const updateNoteHandler: RequestHandler = async (req, res: Response, next) => {
 
   try {
     const resObj = await updateNote(req.params.id, req.body.title);
+    
+    //update title in cache
+    updateTitleInStore(req.params.id, req.body.title);
     
     if(resObj) {
       res.status(200).json(resObj);

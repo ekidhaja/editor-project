@@ -3,7 +3,8 @@ import db from "./firebase";
 import cors from 'cors';
 import { app, server, io } from "./config";
 import apiRoutes from './routes';
-import { NotesResponse } from './types';
+import { updateContentInStore } from './cache';
+import { dbWorker } from './workers';
 
 const PORT = process.env.PORT ?? 3001;
 
@@ -25,11 +26,14 @@ function StartServer() {
   //api routes
   app.use('/api/v1', apiRoutes);
 
+  //start workers
+  dbWorker();
+
   //websocket server
   io.on("connection", (socket: any) => {
 
     //let clients join rooms represented by docId
-    socket.on("join", async (room: any) => {
+    socket.on("join", async (room: string) => {
       socket.join(room);
       socket.emit("joined", room);
       socket.activeRoom = room;
@@ -38,10 +42,14 @@ function StartServer() {
     // When new text changes received, broadcast new text to all client except originator
     socket.on("text-changed", (data: any) => {
       const room = data.docId;
+
       socket.to(room).broadcast.emit("text-changed", {
         newValue: data.newValue,
         ops: data.ops
       });
+
+      //store real time note changes in cache
+      updateContentInStore(room, data.newValue);
     });
 
     //listen for note title updates and notify clients to refresh
@@ -50,18 +58,18 @@ function StartServer() {
     })
 
     //listen for changes in notes collection and emit to all clients
-    // db.collection("notes")
-    //   .onSnapshot((querySnapshot) => {
-    //     var notes: any = [];
-    //     querySnapshot.forEach((doc) => {
-    //       const { title } = doc.data();
-    //         notes.push({ id: doc.id, title});
-    //     });
+    db.collection("notes")
+      .onSnapshot((querySnapshot) => {
+        var notes: any = [];
+        querySnapshot.forEach((doc) => {
+          const { title } = doc.data();
+            notes.push({ id: doc.id, title});
+        });
 
-    //     socket.emit("notesList-changed", { notes });
-    // }, (error) => {
-    //   console.log("Error listening to firestore changes: ", error.message);
-    // });
+        socket.emit("notesList-changed", { notes });
+    }, (error) => {
+      console.log("Error listening to firestore changes: ", error.message);
+    });
 
   });
 

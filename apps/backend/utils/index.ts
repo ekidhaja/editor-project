@@ -1,6 +1,7 @@
 import db from "../firebase";
 import { NoteResponse } from "../types";
 import { Descendant } from "slate";
+import { getFromStore, addToStore } from "../cache";
 
 const blankNoteContent = [
     {
