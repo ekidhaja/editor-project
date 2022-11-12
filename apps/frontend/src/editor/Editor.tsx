@@ -64,7 +64,7 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
   useEffect(() => {
     //@ts-ignore
     YjsEditor.connect(editor);
-
+    console.log("editor changed: ", sharedType);
     //@ts-ignore
     return () => YjsEditor.disconnect(editor);
   }, [editor]) 
@@ -121,7 +121,7 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
   }, [docId]);
 
   return (
-    <Slate editor={editor} value={value} onChange={value => {
+    <Slate editor={editor} value={value} onChange={(value) => {
       setValue(value);
       
       const ops = editor.operations.filter((op: any) => {
@@ -134,7 +134,7 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
 
       //emit changes when user performs an operation on the editor
       if (ops.length && !remote.current && !socketchange.current) {
-        console.log("value is: ", sharedType, value)
+        console.log("value is: ", sharedType)
         socket.emit("text-changed", {
           newValue: value,
           docId,
