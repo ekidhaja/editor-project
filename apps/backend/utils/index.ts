@@ -1,7 +1,9 @@
+import { slateNodesToInsertDelta, yTextToSlateElement } from '@slate-yjs/core';
+import * as Y from 'yjs';
+import { Descendant } from "slate";
 import db from "../firebase";
 import { NoteResponse } from "../types";
-import { Descendant } from "slate";
-import { getFromStore, addToStore } from "../cache";
+import { getFromStore, updateContentInStore } from '../cache';
 
 const blankNoteContent = [
     {
@@ -50,4 +52,41 @@ export async function deleteNote(id: string) {
     const res = await db.collection("notes").doc(id).delete();
 
     return res;
+}
+
+export function syncNote(docId: string, noteUpdate: Descendant[]) {
+    //get note from cache
+    const noteObj = getFromStore(docId);
+    const noteCached = noteObj?.content as Descendant [];
+
+    try {
+        //create ydocs for noteUpdate and noteCached
+        const yDoc1 = new Y.Doc();
+        const yNoteUpdate = yDoc1.get("content", Y.XmlText) as unknown as Y.XmlText;
+        const yDoc2 = new Y.Doc();
+        const yNoteCached = yDoc2.get("content", Y.XmlText) as unknown as Y.XmlText;
+
+        //convert noteUpdate and noteCached from slate to ydoc
+        yNoteUpdate.applyDelta(slateNodesToInsertDelta(noteUpdate));
+        yNoteCached.applyDelta(slateNodesToInsertDelta(noteCached));
+
+
+        //sync noteUpdate with note in cache
+        //const state1 = Y.encodeStateAsUpdate(yNoteCached);
+        // const state2 = Y.encodeStateAsUpdate(yNoteUpdate);
+        // Y.applyUpdate(yNoteCached, state2);
+        // Y.applyUpdate(yNoteUpdate, state1);
+
+
+        //convert yDoc back to slate type
+        const { children } = yTextToSlateElement(yNoteUpdate);
+
+        //update synced note changes in cache
+        updateContentInStore(docId, children);
+
+        return children;
+    }
+    catch(err: any) {
+        console.log("Error occured while syncing notes: ", err.message)
+    }
 }

@@ -3,8 +3,8 @@ import db from "./firebase";
 import cors from 'cors';
 import { app, server, io } from "./config";
 import apiRoutes from './routes';
-import { updateContentInStore } from './cache';
 import { dbWorker } from './workers';
+import { syncNote } from './utils';
 
 const PORT = process.env.PORT ?? 3001;
 
@@ -26,7 +26,7 @@ function StartServer() {
   //api routes
   app.use('/api/v1', apiRoutes);
 
-  //start workers
+  //start workers 
   dbWorker(); 
 
   //websocket server
@@ -42,14 +42,8 @@ function StartServer() {
     // When new text changes received, broadcast new text to all client except originator
     socket.on("text-changed", (data: any) => {
       const room = data.docId;
-
-      socket.to(room).broadcast.emit("text-changed", {
-        newValue: data.newValue,
-        ops: data.ops
-      });
-
-      //store real time note changes in cache
-      updateContentInStore(room, data.newValue);
+      const syncedValue = syncNote(data.docId, data.newValue);
+      socket.to(room).broadcast.emit("text-changed", { newValue: syncedValue });
     });
 
     //listen for note title updates and notify clients to refresh

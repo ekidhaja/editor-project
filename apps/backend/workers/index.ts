@@ -20,7 +20,9 @@ export function dbWorker() {
             //write to db
             batch.commit().then(() => {
                 console.log("Note contents written to db");
-            })
+            }).catch(err => {
+                console.log("Failed to write batch files to db: ");
+            }) 
         }
     
     }, 600000); //every 10 minutes
