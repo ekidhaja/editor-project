@@ -27,6 +27,7 @@ Each app has a `check` script that runs the linting and typechecking. Run it in 
 
 - **TypeScript** as the programming language.
 - **ReactJS** on the frontend and **ExpressJS + NodeJS** on the backend.
+- **MaterialUI** for styling
 - **SlateJS** as primary text editor.
 - **Socket.IO** for emitting and receiving real-time changes to editor.
 - **Firestore** for Database storage.
