@@ -3,7 +3,7 @@ import * as Y from 'yjs';
 import { Descendant } from "slate";
 import db from "../firebase";
 import { NoteResponse } from "../types";
-import { getFromStore, updateContentInStore } from '../cache';
+import { getFromStore } from '../cache';
 
 const blankNoteContent = [
     {
@@ -54,38 +54,44 @@ export async function deleteNote(id: string) {
     return res;
 }
 
-export function syncNote(docId: string, noteUpdate: Descendant[]) {
+export function syncNote(docId: string, noteUpdate: Uint8Array) {
     //get note from cache
     const noteObj = getFromStore(docId);
     const noteCached = noteObj?.content as Descendant [];
-
+    
     try {
-        //create ydocs for noteUpdate and noteCached
-        const yDoc1 = new Y.Doc();
-        const yNoteCached = yDoc1.get("content", Y.XmlText) as unknown as Y.XmlText;
-        const yDoc2 = new Y.Doc();
-        const yNoteUpdated = yDoc2.get("content", Y.XmlText) as unknown as Y.XmlText;
+            const yDoc1 = new Y.Doc();
+            const yNoteCached = yDoc1.get("content", Y.XmlText) as unknown as Y.XmlText;
 
-        //convert noteUpdate and noteCached from slate to ydoc
-        yNoteCached.applyDelta(slateNodesToInsertDelta(noteCached));
-        yNoteUpdated.applyDelta(slateNodesToInsertDelta(noteUpdate));
+            yNoteCached.applyDelta(slateNodesToInsertDelta(noteCached));
+            
+            Y.applyUpdate(yDoc1, noteUpdate);
+            console.log("syncing note: ", yDoc1);
 
-        //sync noteUpdate with note in cache
-        //const state1 = Y.encodeStateAsUpdate(yDoc2);
-        //const state2 = Y.encodeStateAsUpdate(yDoc2);
-        //Y.applyUpdate(yDoc1, state1);
-        //Y.applyUpdate(yDoc2, state1);
+            //convert yDoc back to slate type
+            const { children } = yTextToSlateElement(yNoteCached);
+            console.log("converted children are: ", children)
 
+            //update synced note changes in cache
+            //updateContentInStore(docId, children);
 
-        //convert yDoc back to slate type
-        const { children } = yTextToSlateElement(yNoteUpdated);
-
-        //update synced note changes in cache
-        //updateContentInStore(docId, children);
-
-        return children;
+            return Y.encodeStateAsUpdate(yDoc1);
+       // }
     }
     catch(err: any) {
         console.log("Error occured while syncing notes: ", err.message)
     }
+}
+
+export async function initNote(docId: string) {
+    //get note from cache
+    //const noteObj = getFromStore(docId);
+    const noteObj = await getNote(docId);
+    const noteCached = noteObj?.content as Descendant [];
+
+    const yDoc = new Y.Doc();
+    const sharedType = yDoc.get("content", Y.XmlText) as unknown as Y.XmlText;
+    sharedType.applyDelta(slateNodesToInsertDelta(noteCached));
+
+    return Y.encodeStateAsUpdate(yDoc);
 }

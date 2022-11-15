@@ -3,7 +3,7 @@ import db from "./firebase";
 import cors from 'cors';
 import { app, server, io } from "./config";
 import apiRoutes from './routes';
-import { dbWorker } from './workers';
+//import { dbWorker } from './workers';
 import { syncNote } from './utils';
 
 const PORT = process.env.PORT ?? 3001;
@@ -27,22 +27,24 @@ function StartServer() {
   app.use('/api/v1', apiRoutes);
 
   //start workers 
-  dbWorker(); 
+  //dbWorker(); 
 
   //websocket server
   io.on("connection", (socket: any) => {
 
     //let clients join rooms represented by docId
-    socket.on("join", async (room: string) => {
+    socket.on("join", async (room: string) => { 
       socket.join(room);
       socket.emit("joined", room);
-      socket.activeRoom = room;
+      socket.activeRoom = room; 
     });
 
     // When new text changes received, broadcast new text to all client except originator
     socket.on("text-changed", (data: any) => {
-      const room = data.docId;
-      const syncedValue = syncNote(data.docId, data.newValue);
+      const room = data.docId; 
+      console.log("update arrived: ", data.update)
+      const syncedValue = syncNote(data.docId, data.update);
+      console.log("value synced: ", syncedValue);
       socket.to(room).broadcast.emit("text-changed", { newValue: syncedValue });
     });
 
