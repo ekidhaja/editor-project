@@ -9,6 +9,8 @@ import { EditorToolbar } from './EditorToolbar'
 import { CustomElement } from './CustomElement'
 import { CustomLeaf, CustomText } from './CustomLeaf'
 import io from "socket.io-client"; 
+import * as Y from 'yjs';
+import { withYHistory, withYjs, YjsEditor, slateNodesToInsertDelta } from '@slate-yjs/core';
 
 const socket = io("http://localhost:3001");
 
@@ -31,49 +33,48 @@ interface EditorProps {
 export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, docId }) => {
   const renderElement = useCallback(props => <CustomElement {...props} />, []);
   const renderLeaf = useCallback(props => <CustomLeaf {...props} />, []);
-  const [value, setValue] = useState<Array<Descendant>>(initialValue);
+  const [value, setValue] = useState<Array<Descendant>>([]);
   const remote = useRef(false);
   const socketchange = useRef(false);
-  
-  const editor = useMemo(() => withHtml(withLinks(withHistory(withReact(createEditor())))), []); 
+  const [yDoc, setYDoc] = useState<Y.Doc>(); 
+
+  const doc = new Y.Doc();
+  const sharedType = useMemo(() => {
+    const sharedType = doc.get("content", Y.XmlText) as Y.XmlText;
+
+    // Load the initial value into the yjs document
+    sharedType.applyDelta(slateNodesToInsertDelta(initialValue))
+    setYDoc(doc);
+
+    doc.on("update", (update) => {
+      console.log("text changed: ", update)
+      socket.emit("text-changed", { update, docId });
+    });
+    return sharedType;
+  }, []);
+
+  const editor = useMemo(
+    () => withHtml(withLinks(withHistory(withReact(withYHistory(withYjs(createEditor(), sharedType)))))), 
+    []
+  );
+
+  // Connect editor in useEffect to comply with concurrent mode requirements.
+  useEffect(() => {
+    //@ts-ignore
+    YjsEditor.connect(editor);
+    //@ts-ignore
+    return () => YjsEditor.disconnect(editor);
+  }, [editor]);
 
   //Apply changes from remote docs
   useEffect(() => {
     //join room represented by docId
     socket.emit('join', docId);
 
-    socket.on(`text-changed`, ({ newValue }: any) => {
-      remote.current = true;
-
-      // Get initial total nodes to prevent deleting affecting the loop
-      let totalNodes = editor.children.length;
-
-      // No saved content, don't delete anything to prevent errors
-      if (newValue?.length) {
-
-        // Remove every node except the last one
-        // Otherwise SlateJS will return error as there's no content
-        for (let i = 0; i < totalNodes - 1; i++) {
-            Transforms.removeNodes(editor, {
-                at: [totalNodes-i-1],
-            });
-        }
-
-        // Add content to SlateJS
-        for (const val of newValue ) {
-            Transforms.insertNodes(editor, val, {
-                at: [editor.children.length],
-            });
-        }
-
-        // Remove the last node that was leftover from before
-        Transforms.removeNodes(editor, {
-            at: [0],
-        });
-      }
-
-        remote.current = false;
-        socketchange.current = true;
+    //sync doc with updates
+    socket.on(`text-changed`, ({ newValue }: { newValue: Uint8Array }) => {
+      console.log("change came: ", newValue);
+      Y.applyUpdate(doc, newValue)
     });
 
     socket.on(`failed`,()=>{
@@ -101,7 +102,7 @@ export const Editor: React.FC<EditorProps> = ({ initialValue = [], placeholder, 
 
       //emit changes when user performs an operation on the editor
       if (ops.length && !remote.current && !socketchange.current) {
-        socket.emit("text-changed", { newValue: value, docId });
+        //socket.emit("text-changed", { newValue: value, docId });
       }
 
       socketchange.current = false;

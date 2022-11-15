@@ -39,7 +39,7 @@ const Home: React.FC<SingleNoteProps> = ({ id }) => {
       setNoteTitle(title);
     });
 
-    if(id) fetchNote();
+      fetchNote();
     
     return () => {
       abortController.abort();
