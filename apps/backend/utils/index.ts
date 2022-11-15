@@ -62,27 +62,26 @@ export function syncNote(docId: string, noteUpdate: Descendant[]) {
     try {
         //create ydocs for noteUpdate and noteCached
         const yDoc1 = new Y.Doc();
-        const yNoteUpdate = yDoc1.get("content", Y.XmlText) as unknown as Y.XmlText;
+        const yNoteCached = yDoc1.get("content", Y.XmlText) as unknown as Y.XmlText;
         const yDoc2 = new Y.Doc();
-        const yNoteCached = yDoc2.get("content", Y.XmlText) as unknown as Y.XmlText;
+        const yNoteUpdated = yDoc2.get("content", Y.XmlText) as unknown as Y.XmlText;
 
         //convert noteUpdate and noteCached from slate to ydoc
-        yNoteUpdate.applyDelta(slateNodesToInsertDelta(noteUpdate));
         yNoteCached.applyDelta(slateNodesToInsertDelta(noteCached));
-
+        yNoteUpdated.applyDelta(slateNodesToInsertDelta(noteUpdate));
 
         //sync noteUpdate with note in cache
-        //const state1 = Y.encodeStateAsUpdate(yNoteCached);
-        // const state2 = Y.encodeStateAsUpdate(yNoteUpdate);
-        // Y.applyUpdate(yNoteCached, state2);
-        // Y.applyUpdate(yNoteUpdate, state1);
+        //const state1 = Y.encodeStateAsUpdate(yDoc2);
+        //const state2 = Y.encodeStateAsUpdate(yDoc2);
+        //Y.applyUpdate(yDoc1, state1);
+        //Y.applyUpdate(yDoc2, state1);
 
 
         //convert yDoc back to slate type
-        const { children } = yTextToSlateElement(yNoteUpdate);
+        const { children } = yTextToSlateElement(yNoteUpdated);
 
         //update synced note changes in cache
-        updateContentInStore(docId, children);
+        //updateContentInStore(docId, children);
 
         return children;
     }
