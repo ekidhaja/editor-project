@@ -38,7 +38,7 @@ Each app has a `check` script that runs the linting and typechecking. Run it in 
 
   #### How to implement rich-text editing
 
-  Slatejs was used as the primary editor. It supports rich-text editing out-of-the-box. Different formating can be added, cuch as Bold, Italics, Underline, Bulleted-list, Numbered-list, etc.
+  Slatejs was used as the primary editor. It supports rich-text editing out-of-the-box. Different formating can be added, such as Bold, Italics, Underline, Bulleted-list, Numbered-list, etc.
 
   #### How to transmit changes made in editor to other clients in real-time
 
@@ -63,4 +63,4 @@ Each app has a `check` script that runs the linting and typechecking. Run it in 
 
 ## Pending work
 
-- Merge notes/state utilizing Yjs crdt library
+  #### Checkout **add-crdt** branch to see attempt on syning notes using Yjs
